@@ -5,6 +5,7 @@ import random
 import numpy as np  # para arrays
 from matplotlib import pyplot as plt  # para visualizar as imagens
 from colorama import Fore, Style
+import uuid # gerar nomes únicos para as imagens
 
 # tensorflow - functional API
 from tensorflow.python.keras.models import Model
@@ -20,11 +21,13 @@ import tensorflow as tf
 #     tf.config.experimental.set_memory_growth(gpu, True) # set memory growth
 
 # setup paths
+
 POS_PATH = os.path.join('data', 'positive')  # imagem igual
 NEG_PATH = os.path.join('data', 'negative')  # imagem diferente
 ANC_PATH = os.path.join('data', 'anchor')  # imagem da camera
 
 # criando pastas
+
 try:
     os.makedirs(POS_PATH)
     os.makedirs(NEG_PATH)
@@ -33,6 +36,7 @@ except:
     print(f'{Fore.RED}pastas já criadas{Style.RESET_ALL}')
 
 # collect negative images
+
 # database de imagens para usar como negative: http://vis-www.cs.umass.edu/lfw/
 # mover todas as imagens para data/negative
 try:
@@ -43,3 +47,37 @@ try:
             os.replace(EX_PATH, NEW_PATH)
 except:
     print(f'{Fore.RED}arquivos já movidos{Style.RESET_ALL}')
+
+# collect positive and anchor images
+
+# estabelecendo conexão com a webcam
+# se der erro aqui, tente outros numeros pq pode variar de pc pra pc
+cap = cv2.VideoCapture(0)
+while cap.isOpened():
+    ret, frame = cap.read()
+
+    # cortar frame para 250x250px
+    frame = frame[120:120+250, 200:200+250]
+
+    # collect anchors
+    if cv2.waitKey(1) & 0XFF == ord('a'): # aperte a para salvar a imagem
+        # unique file path
+        imgname = os.path.join(ANC_PATH, f'{uuid.uuid1()}.jpg')
+        # salvando imagem
+        cv2.imwrite(imgname, frame)
+
+    # collect positive
+    if cv2.waitKey(1) & 0XFF == ord('p'):
+        imgname = os.path.join(POS_PATH, f'{uuid.uuid1()}.jpg')
+        cv2.imwrite(imgname, frame)
+
+    # mostrar imagem na tela
+    cv2.imshow('Image Collection', frame)
+
+    # stop
+    if cv2.waitKey(1) & 0XFF == ord('q'):  # aperte q para sair
+        break
+# liberar a webcam
+cap.release()
+# fechar janela
+cv2.destroyAllWindows()
