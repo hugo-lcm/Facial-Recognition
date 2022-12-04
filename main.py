@@ -5,7 +5,7 @@ import random
 import numpy as np  # para arrays
 from matplotlib import pyplot as plt  # para visualizar as imagens
 from colorama import Fore, Style
-import uuid # gerar nomes únicos para as imagens
+import uuid  # gerar nomes únicos para as imagens
 
 # tensorflow - functional API
 from tensorflow.python.keras.models import Model
@@ -60,7 +60,7 @@ while cap.isOpened():
     frame = frame[120:120+250, 200:200+250]
 
     # collect anchors
-    if cv2.waitKey(1) & 0XFF == ord('a'): # aperte a para salvar a imagem
+    if cv2.waitKey(1) & 0XFF == ord('a'):  # aperte a para salvar a imagem
         # unique file path
         imgname = os.path.join(ANC_PATH, f'{uuid.uuid1()}.jpg')
         # salvando imagem
@@ -81,3 +81,19 @@ while cap.isOpened():
 cap.release()
 # fechar janela
 cv2.destroyAllWindows()
+
+# get image directories
+
+anchor = tf.data.Dataset.list_files(ANC_PATH+'/*.jpg').take(300)
+positive = tf.data.Dataset.list_files(POS_PATH+'/*.jpg').take(300)
+negative = tf.data.Dataset.list_files(NEG_PATH+'/*.jpg').take(300)
+
+# preprocessing - scale and resize
+
+
+def preprocess(file_path):
+    byte_img = tf.io.read_file(file_path)
+    img = tf.io.decode_jpeg(byte_img)
+    img = tf.image.resize(img, (100, 100))
+    img /= 255.0
+    return img
