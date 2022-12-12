@@ -57,7 +57,7 @@ while cap.isOpened():
     ret, frame = cap.read()
 
     # cortar frame para 250x250px
-    frame = frame[120:120+250, 200:200+250]
+    frame = frame[120:120+250, 200:200+250, :]
 
     # collect anchors
     if cv2.waitKey(1) & 0XFF == ord('a'):  # aperte a para salvar a imagem
