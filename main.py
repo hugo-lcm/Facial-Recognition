@@ -91,9 +91,20 @@ negative = tf.data.Dataset.list_files(NEG_PATH+'/*.jpg').take(300)
 # preprocessing - scale and resize
 
 
-def preprocess(file_path):
+def preProcess(file_path):
     byte_img = tf.io.read_file(file_path)
     img = tf.io.decode_jpeg(byte_img)
     img = tf.image.resize(img, (100, 100))
     img /= 255.0
     return img
+
+# create labelled dataset
+
+positives = tf.data.Dataset.zip((anchor, positive, tf.data.Dataset.from_tensor_slices(tf.ones(len(anchor)))))
+negatives = tf.data.Dataset.zip((anchor, negative, tf.data.Dataset.from_tensor_slices(tf.zeros(len(anchor)))))
+data = positives.concatenate(negatives)
+
+samples = data.as_numpy_iterator()
+
+ex = samples.next()
+print(ex)
