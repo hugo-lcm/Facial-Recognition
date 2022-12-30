@@ -15,10 +15,14 @@ import tensorflow as tf
 # gpu growth - limitar o tanto de vram que o tensorflow poderá usar
 # só fazer se for rodar o código localmente e com gpu dedicada
 # avoid OOM (out of memory) errors
-
-# gpus = tf.config.experimental.list_physical_devices('GPU') # pega todas as gpu's da maquina
-# for gpu in gpus:
-#     tf.config.experimental.set_memory_growth(gpu, True) # set memory growth
+try:
+    gpus = tf.config.experimental.list_physical_devices(
+        'GPU')  # pega todas as gpu's da maquina
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(
+            gpu, True)  # set memory growth]
+except:
+    print(f'{Fore.RED}nenhuma gpu dedicada encontrada{Style.RESET_ALL}')
 
 # setup paths
 
@@ -100,8 +104,11 @@ def preProcess(file_path):
 
 # create labelled dataset
 
-positives = tf.data.Dataset.zip((anchor, positive, tf.data.Dataset.from_tensor_slices(tf.ones(len(anchor)))))
-negatives = tf.data.Dataset.zip((anchor, negative, tf.data.Dataset.from_tensor_slices(tf.zeros(len(anchor)))))
+
+positives = tf.data.Dataset.zip(
+    (anchor, positive, tf.data.Dataset.from_tensor_slices(tf.ones(len(anchor)))))
+negatives = tf.data.Dataset.zip(
+    (anchor, negative, tf.data.Dataset.from_tensor_slices(tf.zeros(len(anchor)))))
 data = positives.concatenate(negatives)
 
 samples = data.as_numpy_iterator()
