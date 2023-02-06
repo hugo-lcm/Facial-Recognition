@@ -198,3 +198,9 @@ def make_siamese_model():
     classifier = Dense(1, activation='sigmoid')(distances)
 
     return Model(inputs=[input_image, validation_image], outputs=[classifier], name='SiameseNetwork')
+
+# 5 training
+# 5.1 setup loss and optimizer
+
+binary_cross_loss = tf.losses.BinaryCrossEntropy()
+opt = tf.keras.optimizers.Adam(1e-4)
