@@ -166,3 +166,13 @@ def make_embedding():
     d1 = Dense(4096, activation='sigmoid')(f1)
 
     return Model(inputs=[inp], outputs=[d1], name='embedding')
+
+# 4.2 build distance layer
+
+
+class L1Dist(Layer):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def call(self, input_embedding, validation_embedding):
+        return tf.math.abs(input_embedding - validation_embedding)
