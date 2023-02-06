@@ -238,3 +238,21 @@ def train_step(batch):
     opt.apply_gradients(zip(grad, siamese_model.trainable_variables))
     
     return loss
+
+# 5.4 build training loop
+
+def train(data, EPOCHS):
+    # loop through epochs
+    for epoch in range(1, EPOCHS+1):
+        print(f'\n Epoch {epoch}/{EPOCHS}')
+        progbar = tf.keras.utils.Progbar(len(train_data))
+
+        # loop through each batch
+        for idx, batch in enumerate(train_data):
+            # run train step here
+            train_step(batch)
+            progbar.update(idx+1)
+
+        # save checkpoints
+        if epoch % 10 == 0:
+            checkpoint.save(file_prefix=checkpoint_prefix)
