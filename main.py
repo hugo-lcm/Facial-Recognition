@@ -167,6 +167,7 @@ def make_embedding():
 
     return Model(inputs=[inp], outputs=[d1], name='embedding')
 
+
 embedding = make_embedding()
 
 # 4.2 build distance layer
@@ -192,15 +193,25 @@ def make_siamese_model():
     # combine siamese distance components
     siamese_layer = L1Dist()
     siamese_layer._name = 'distance'
-    distances = siamese_layer(embedding(input_image), embedding(validation_image))
+    distances = siamese_layer(embedding(input_image),
+                              embedding(validation_image))
 
     # classification layer
     classifier = Dense(1, activation='sigmoid')(distances)
 
     return Model(inputs=[input_image, validation_image], outputs=[classifier], name='SiameseNetwork')
 
+
+siamese_model = make_siamese_model()
+
 # 5 training
 # 5.1 setup loss and optimizer
 
 binary_cross_loss = tf.losses.BinaryCrossEntropy()
 opt = tf.keras.optimizers.Adam(1e-4)
+
+# 5.2 establish checkpoints
+
+checkpoint_dir = './training_checkpoints'
+checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
+checkpoint = tf.train.Checkpoint(opt=opt, siamese_model=siamese_model)
