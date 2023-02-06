@@ -207,7 +207,7 @@ siamese_model = make_siamese_model()
 # 5 training
 # 5.1 setup loss and optimizer
 
-binary_cross_loss = tf.losses.BinaryCrossEntropy()
+binary_cross_loss = tf.losses.BinaryCrossentropy()
 opt = tf.keras.optimizers.Adam(1e-4)
 
 # 5.2 establish checkpoints
@@ -215,3 +215,26 @@ opt = tf.keras.optimizers.Adam(1e-4)
 checkpoint_dir = './training_checkpoints'
 checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
 checkpoint = tf.train.Checkpoint(opt=opt, siamese_model=siamese_model)
+
+# 5.3 build train step function
+
+@tf.function
+def train_step(batch):
+    with tf.GradientTape() as tape:
+        # get anchor and positive/negative image
+        X = batch[:2]
+        # get label
+        y = batch[2]
+
+        # forward pass
+        yhat = siamese_model(X, training=True)
+        # calculate loss
+        loss = binary_cross_loss(y, yhat)
+
+    # calculate gradients
+    grad = tape.gradient(loss, siamese_model.trainable_variables)
+
+    # calculate updated weights and apply to siamese model
+    opt.apply_gradients(zip(grad, siamese_model.trainable_variables))
+    
+    return loss
