@@ -230,6 +230,7 @@ def train_step(batch):
         yhat = siamese_model(X, training=True)
         # calculate loss
         loss = binary_cross_loss(y, yhat)
+    print(loss)
 
     # calculate gradients
     grad = tape.gradient(loss, siamese_model.trainable_variables)
@@ -245,10 +246,10 @@ def train(data, EPOCHS):
     # loop through epochs
     for epoch in range(1, EPOCHS+1):
         print(f'\n Epoch {epoch}/{EPOCHS}')
-        progbar = tf.keras.utils.Progbar(len(train_data))
+        progbar = tf.keras.utils.Progbar(len(data))
 
         # loop through each batch
-        for idx, batch in enumerate(train_data):
+        for idx, batch in enumerate(data):
             # run train step here
             train_step(batch)
             progbar.update(idx+1)
@@ -256,3 +257,8 @@ def train(data, EPOCHS):
         # save checkpoints
         if epoch % 10 == 0:
             checkpoint.save(file_prefix=checkpoint_prefix)
+
+# 5.5 train the model
+
+EPOCHS = 50
+print(train(train_data, EPOCHS))
