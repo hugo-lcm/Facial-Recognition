@@ -11,6 +11,7 @@ import uuid  # gerar nomes únicos para as imagens
 # tensorflow - functional API
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Layer, Conv2D, Dense, MaxPooling2D, Input, Flatten
+from tensorflow.keras.metrics import Precision, Recall
 import tensorflow as tf
 
 # 1.3 set gpu growth - limitar o tanto de vram que o tensorflow poderá usar
@@ -218,6 +219,7 @@ checkpoint = tf.train.Checkpoint(opt=opt, siamese_model=siamese_model)
 
 # 5.3 build train step function
 
+
 @tf.function
 def train_step(batch):
     with tf.GradientTape() as tape:
@@ -237,10 +239,11 @@ def train_step(batch):
 
     # calculate updated weights and apply to siamese model
     opt.apply_gradients(zip(grad, siamese_model.trainable_variables))
-    
+
     return loss
 
 # 5.4 build training loop
+
 
 def train(data, EPOCHS):
     # loop through epochs
@@ -260,5 +263,43 @@ def train(data, EPOCHS):
 
 # 5.5 train the model
 
-EPOCHS = 50
-print(train(train_data, EPOCHS))
+# EPOCHS = 50
+# print(train(train_data, EPOCHS))
+
+# 6 evaluate model
+
+
+# 6.1 make predictions
+# get a batch of test data
+test_input, test_val, y_true = test_data.as_numpy_iterator().next()
+
+# make predictions
+y_hat = siamese_model.predict([test_input, test_val])
+[1 if prediction > 0.5 else 0 for prediction in y_hat]
+
+# 6.2 calculate metrics
+# creating a metric object
+m = Recall()
+
+# calculating the recall value
+m.update_state(y_true, y_hat)
+
+# return recall result
+print(f'recall: {m.result().numpy()}')
+
+m = Precision()
+m.update_state(y_true, y_hat)
+print(f'precision: {m.result().numpy()}')
+
+# 6.3 visualize results
+# set plot size
+plt.figure(figsize=(10, 8))
+
+# set first subplot
+plt.subplot(1, 2, 1)
+plt.imshow(test_input[0])
+
+# set second subplot
+plt.subplot(1, 2, 2)
+plt.imshow(test_val[0])
+plt.show()
