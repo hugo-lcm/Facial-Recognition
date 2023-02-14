@@ -11,21 +11,18 @@ import uuid  # gerar nomes únicos para as imagens
 # tensorflow - functional API
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Layer, Conv2D, Dense, MaxPooling2D, Input, Flatten
-from tensorflow.keras.metrics import Precision, Recall
+from tensorflow.python.keras.metrics import Precision, Recall
 import tensorflow as tf
 
 # 1.3 set gpu growth - limitar o tanto de vram que o tensorflow poderá usar
 # avoid OOM (out of memory) errors
 
+# pega todas as gpu's da maquina
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    # set memory growth
+    tf.config.experimental.set_memory_growth(gpu, True)
 
-try:
-    gpus = tf.config.experimental.list_physical_devices(
-        'GPU')  # pega todas as gpu's da maquina
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(
-            gpu, True)  # set memory growth
-except:
-    print(f'{Fore.RED}nenhuma gpu dedicada encontrada{Style.RESET_ALL}')
 
 # 1.4 create folder structures
 
@@ -87,6 +84,7 @@ while cap.isOpened():
     # stop
     if cv2.waitKey(1) & 0XFF == ord('q'):  # aperte q para sair
         break
+
 # liberar a webcam
 cap.release()
 # fechar janela
@@ -129,7 +127,7 @@ def preprocess_twin(input_img, validation_img, label):
 # build dataloader pipeline
 data = data.map(preprocess_twin)
 data = data.cache()
-data = data.shuffle(buffer_size=1024)
+data = data.shuffle(buffer_size=10000)
 
 # training partition
 train_data = data.take(round(len(data)*.7))
@@ -162,7 +160,7 @@ def make_embedding():
     m3 = MaxPooling2D(64, (2, 2), padding='same')(c3)
 
     # final embedding layer
-    c4 = Conv2D(256,  (4, 4), activation='relu')(m3)
+    c4 = Conv2D(256, (4, 4), activation='relu')(m3)
     f1 = Flatten()(c4)
     d1 = Dense(4096, activation='sigmoid')(f1)
 
@@ -200,7 +198,7 @@ def make_siamese_model():
     # classification layer
     classifier = Dense(1, activation='sigmoid')(distances)
 
-    return Model(inputs=[input_image, validation_image], outputs=[classifier], name='SiameseNetwork')
+    return Model(inputs=[input_image, validation_image], outputs=classifier, name='SiameseNetwork')
 
 
 siamese_model = make_siamese_model()
@@ -303,3 +301,13 @@ plt.imshow(test_input[0])
 plt.subplot(1, 2, 2)
 plt.imshow(test_val[0])
 plt.show()
+
+# 7 save model
+
+# save weights
+siamese_model.save('siamesemodel.h5')
+
+# reload model
+
+siamese_model = tf.keras.models.load_model(
+    'siamesemodel.h5', compile=False, custom_objects={'L1Dist': L1Dist})
